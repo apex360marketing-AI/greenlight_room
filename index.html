@@ -264,11 +264,10 @@ body.hasbar{padding-bottom:5.2rem}
 .hero{isolation:isolate}
 .hero::before{content:"";position:absolute;left:50%;bottom:-32%;width:78%;height:62%;transform:translateX(-50%);
  z-index:1;pointer-events:none;border-radius:50%;
- background:radial-gradient(ellipse at center,
-  color-mix(in srgb,var(--p-craft) 52%,transparent) 0%,
-  color-mix(in srgb,var(--p-craft) 22%,transparent) 38%,
-  transparent 72%);
- filter:blur(34px)}
+ /* The purple wash across the pane is gone. It read as a hue laid over the
+    glass rather than as light coming off the bottle, and it fought the
+    honeycomb now showing through. The bottle gets its own tight pool below. */
+ background:none;filter:none}
 .tab{position:relative;isolation:isolate}
 .tab::before{content:"";position:absolute;left:0;right:0;bottom:-2px;height:74%;z-index:-1;pointer-events:none;
  border-radius:5px;opacity:0;transition:opacity .22s ease;
@@ -613,7 +612,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:20px;border:0;background:v
   color-mix(in srgb,var(--p-ops) 2%,transparent) 48%,transparent 100%);
  background-size:60vw 40vw;background-repeat:no-repeat;
  background-position:calc(var(--px,50vw) - 30vw) calc(var(--py,40vh) - 20vw)}
-#torch.lit{opacity:.78}
+#torch.lit{opacity:.66}  /* eased back ~15% from .78 */
 #torch.over-card{opacity:.14}
 /* Without mask support an unmasked bright pattern would cover the whole page. */
 @supports not ((mask-image:radial-gradient(#000,transparent)) or (-webkit-mask-image:radial-gradient(#000,transparent))){
@@ -948,12 +947,11 @@ footer{border-top:1px solid var(--line-soft);padding-block:1.6rem 3rem;margin-to
    that the full-bleed box already clears the copy. */
 @media (min-width:621px) and (max-width:1180px){
  .hero .bg{left:auto;right:0;width:min(46%,430px);
-  --vmask:radial-gradient(ellipse 56% 84% at 62% 50%,
-    #000 0 44%, rgba(0,0,0,.72) 62%, rgba(0,0,0,.26) 78%, transparent 92%)}
+  --vmask:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.18) 20%,
+    rgba(0,0,0,.58) 40%,rgba(0,0,0,.9) 58%,#000 72%)}
  /* The backlight is also narrowed and eased back here: at 640 and 960 its bloom
     was the last thing holding the chosen line under 4.5:1. */
- .hero .vglow{right:-4%;width:46%}
- .hero .vglow.on{opacity:.72}
+ .hero .vglow{right:2%;width:34%}
  /* The copy column has to stop where the image box starts, or the two simply
     overlap again: at 960px the 52ch column ran 241px into the bottle. */
  .hero .in{max-width:min(52ch,50%)}
@@ -966,7 +964,7 @@ footer{border-top:1px solid var(--line-soft);padding-block:1.6rem 3rem;margin-to
     down to 2.9:1. The bottle has nothing to say at phone size; the backlight
     carries the colour instead. */
  .hero .bg{display:none}
- .hero .vglow.on{opacity:.6}
+ .hero .vglow{display:none}
 }
 
 /* 3 - the vial. Saturation and contrast on the image itself, a warm backlight
@@ -986,19 +984,44 @@ footer{border-top:1px solid var(--line-soft);padding-block:1.6rem 3rem;margin-to
    fix is alpha - mask the image down to the bottle and feather its backing away,
    leaving the rest of the pane as true glass. */
 .hero .bg{filter:saturate(1.22) contrast(1.08) brightness(1.06);
- --vmask:radial-gradient(ellipse 40% 84% at 84% 50%,
-   #000 0 40%, rgba(0,0,0,.72) 58%, rgba(0,0,0,.28) 74%, transparent 88%);
+ /* A radial mask was wrong here. Its vertical radius ran past the box, so the
+    ellipse was clipped flat top and bottom and read as a rectangle sitting in
+    the honeycomb - the hard edge that had no business being there. A single
+    horizontal ramp has no shape of its own: the only edges left are the card's
+    own, and the purple simply thins out across the pane until it is gone. */
+ /* A band, not a ramp. Ramping to solid at the right edge turned the whole
+    right third into a black block - the "black screen" this was meant to avoid.
+    The bottle sits between roughly 66% and 81% of this box, so the mask is
+    opaque across that and eases off on BOTH sides, which lets the honeycomb
+    come back at the right edge as well as the left. */
+ --vmask:linear-gradient(90deg,
+   transparent 0%, rgba(0,0,0,.04) 26%, rgba(0,0,0,.20) 42%,
+   rgba(0,0,0,.58) 54%, #000 62%, #000 86%,
+   rgba(0,0,0,.55) 93%, rgba(0,0,0,.22) 97%, transparent 100%);
  -webkit-mask-image:var(--vmask);mask-image:var(--vmask);
  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
- -webkit-mask-size:100% 100%;mask-size:100% 100%}
-.hero .vglow{position:absolute;z-index:1;pointer-events:none;border-radius:50%;
- right:-6%;top:50%;width:62%;height:86%;transform:translateY(-50%);
+ -webkit-mask-size:100% 100%;mask-size:100% 100%;
+ /* The bottle grows from where it actually sits, so it comes toward the reader
+    rather than sliding across the pane. */
+ transform-origin:78% 52%;
+ transition:transform .55s cubic-bezier(.2,.7,.3,1),filter .55s ease}
+.hero .vglow{position:absolute;pointer-events:none;border-radius:50%;
+ /* z-index 0 keeps it UNDER the bottle. At z-index 1 it came after the <img>
+    in the DOM and painted over it, which is what turned the bottle purple
+    instead of lighting it. */
+ z-index:0;
+ right:4%;top:52%;width:26%;height:88%;transform:translateY(-50%);
+ /* Not a hue - a small pool of black that the bottle sits on, so it reads as
+    sharply as it does on its own render while the rest of the pane stays glass.
+    Carried fully to transparent inside its own box so nothing has an edge. */
  background:radial-gradient(ellipse at center,
-  color-mix(in srgb,#f4e3ae 34%,transparent) 0%,
-  color-mix(in srgb,var(--p-craft) 26%,transparent) 34%,
-  color-mix(in srgb,var(--p-craft) 10%,transparent) 58%,
-  transparent 76%);
- filter:blur(46px)}
+  rgba(0,0,0,.74) 0%,
+  rgba(0,0,0,.58) 32%,
+  rgba(0,0,0,.28) 58%,
+  rgba(0,0,0,.09) 76%,
+  transparent 92%);
+ filter:blur(24px);
+ transition:opacity .9s ease,transform .55s cubic-bezier(.2,.7,.3,1)}
 .hero .bg,.hero .vglow{transition:opacity .9s ease}
 .hero .vglow{opacity:0}.hero .vglow.on{opacity:1}
 @media (prefers-reduced-motion:reduce){.hero .bg,.hero .vglow{transition:none}}
@@ -1067,6 +1090,36 @@ footer{border-top:1px solid var(--line-soft);padding-block:1.6rem 3rem;margin-to
    it simply paints nothing. Legibility comes from the .sub text-shadow and from
    the headline sitting left of the vial. */
 .hero::after{background:none}
+
+/* ---------- the hero's light, and what hovering it does ----------
+   The cards below carry their accent as a bar down the left edge. On the hero
+   that reads as a label on a card; across the top it reads as a light above a
+   room, which is what this section is. ::after is free now that the scrim
+   paints nothing, so the line lives there rather than in a new element. */
+.hero::after{
+ background:linear-gradient(90deg,
+   transparent 0%,
+   color-mix(in srgb,var(--p-craft) 55%,transparent) 14%,
+   color-mix(in srgb,#f4e3ae 72%,transparent) 42%,
+   color-mix(in srgb,var(--p-craft) 55%,transparent) 72%,
+   transparent 100%);
+ background-repeat:no-repeat;background-size:100% 1px;background-position:0 0;
+ opacity:.5;transition:opacity .45s ease}
+
+/* Hover lifts the light and brings the bottle forward. The hue stays the purple
+   already in the pane rather than introducing a third colour next to the gold
+   and the green - more of what is there, not something new. */
+@media (hover:hover) and (pointer:fine){
+ .hero:hover::after{opacity:1}
+ .hero:hover .vglow.on{transform:translateY(-50%) scale(1.14)}
+ .hero:hover .bg{transform:scale(1.15);filter:saturate(1.3) contrast(1.1) brightness(1.1)}
+}
+@media (prefers-reduced-motion:reduce){
+ .hero::after{transition:none}
+ .hero .bg,.hero .vglow{transition:none}
+ .hero:hover .bg{transform:none}
+}
+@media print{.hero::after{background:none}}
 
 /* 4 - the decision, stated on the main page without a click. */
 .hero .chosen{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;
@@ -3944,7 +3997,10 @@ const TABS=[["start","Overview",tabStart],["name","Pick Your Brand",tabName],["c
  const fine=matchMedia("(hover:hover) and (pointer:fine)").matches;
  const still=matchMedia("(prefers-reduced-motion:reduce)").matches;
  if(!fine||still)return;
- const PANE=".card,.big,.note,.tw,button,a,input,table,.rail,.post,.chip";
+ /* .hero was missing from this list, so the green torch burned at full strength
+    exactly where the pane carries its own purple light - two lights fighting.
+    The hero dims the torch like every other pane. */
+ const PANE=".card,.big,.note,.tw,button,a,input,table,.rail,.post,.chip,.hero";
  let x=0,y=0,q=false;
  function paint(){
   q=false;
