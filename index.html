@@ -934,12 +934,63 @@ footer{border-top:1px solid var(--line-soft);padding-block:1.6rem 3rem;margin-to
    gradient is a background and renders BENEATH a text-shadow - a dark shadow
    there buries the chrome entirely. The headline sits over the darkest end of
    the scrim and needs no help. */
-.hero .sub{text-shadow:0 1px 18px rgba(9,9,10,.92),0 1px 3px rgba(9,9,10,.8)}
+.hero .sub,.hero .dm,.hero .chosen{text-shadow:0 1px 18px rgba(9,9,10,.92),0 1px 3px rgba(9,9,10,.8)}
+
+/* Below this width object-fit:contain collapses the vial into a horizontal band
+   in the middle of the pane - which is exactly where the sub, the dateline and
+   the chosen line sit. Measured contrast behind the dateline fell to 1.0:1. The
+   bottle stays, as a backdrop rather than a competitor. */
+/* Between phone and wide desktop the contained vial spreads back across the
+   copy column: measured 99th-percentile contrast behind the dateline and the
+   chosen line fell to 1.0-1.2:1 from 640px all the way to 1100px. Pin the
+   image box to the right of the 52ch copy column instead of letting it fill
+   the pane, and move the mask with it. Above 1180px the pane is wide enough
+   that the full-bleed box already clears the copy. */
+@media (min-width:621px) and (max-width:1180px){
+ .hero .bg{left:auto;right:0;width:min(46%,430px);
+  --vmask:radial-gradient(ellipse 56% 84% at 62% 50%,
+    #000 0 44%, rgba(0,0,0,.72) 62%, rgba(0,0,0,.26) 78%, transparent 92%)}
+ /* The backlight is also narrowed and eased back here: at 640 and 960 its bloom
+    was the last thing holding the chosen line under 4.5:1. */
+ .hero .vglow{right:-4%;width:46%}
+ .hero .vglow.on{opacity:.72}
+ /* The copy column has to stop where the image box starts, or the two simply
+    overlap again: at 960px the 52ch column ran 241px into the bottle. */
+ .hero .in{max-width:min(52ch,50%)}
+}
+
+@media (max-width:620px){
+ /* At this width object-fit:contain stretches the vial across the whole copy
+    block - 314x604 behind a 266x191 paragraph - so it is not a backdrop, it is
+    a competitor, and even at 26% it pulled worst-pixel contrast behind the sub
+    down to 2.9:1. The bottle has nothing to say at phone size; the backlight
+    carries the colour instead. */
+ .hero .bg{display:none}
+ .hero .vglow.on{opacity:.6}
+}
 
 /* 3 - the vial. Saturation and contrast on the image itself, a warm backlight
    behind it from a real element (both hero pseudo-elements are already spoken
    for), and a touch more of the glass bloom the panes elsewhere carry. */
-.hero .bg{filter:saturate(1.22) contrast(1.08) brightness(1.06)}
+/* The vial render carries its own near-black backing, and the <img> spans the
+   whole pane - so as a plain image it was an opaque sheet sitting over the
+   glass, which is why the hero never showed the honeycomb however translucent
+   its own background was. Screen blending drops that black to nothing and
+   keeps only the lit bottle, which is also the more vibrant reading of it.
+   .hero already carries isolation:isolate, so the blend cannot escape the pane. */
+/* The vial render is a full-bleed <img> with its own near-black backing, and an
+   image is opaque wherever it paints - so it was covering the whole pane and no
+   amount of translucency on .hero could show the honeycomb through it. A blend
+   mode does not fix this: blending changes colour, not alpha, and .shell is a
+   stacking context so the blend can never reach the honeycomb outside it. The
+   fix is alpha - mask the image down to the bottle and feather its backing away,
+   leaving the rest of the pane as true glass. */
+.hero .bg{filter:saturate(1.22) contrast(1.08) brightness(1.06);
+ --vmask:radial-gradient(ellipse 40% 84% at 84% 50%,
+   #000 0 40%, rgba(0,0,0,.72) 58%, rgba(0,0,0,.28) 74%, transparent 88%);
+ -webkit-mask-image:var(--vmask);mask-image:var(--vmask);
+ -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+ -webkit-mask-size:100% 100%;mask-size:100% 100%}
 .hero .vglow{position:absolute;z-index:1;pointer-events:none;border-radius:50%;
  right:-6%;top:50%;width:62%;height:86%;transform:translateY(-50%);
  background:radial-gradient(ellipse at center,
@@ -977,6 +1028,8 @@ footer{border-top:1px solid var(--line-soft);padding-block:1.6rem 3rem;margin-to
 /* Without backdrop-filter the hero controls fall back to the flat surface. */
 @supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){
  .hero .btn{background:var(--surface-2)}
+ /* The pane needs the fallback too, or it loses all separation from the hero. */
+ .hero .res{background:var(--surface-2)}
 }
 
 /* 5 - the result pane the Review Complete control opens. It is the same glass
@@ -996,6 +1049,25 @@ footer{border-top:1px solid var(--line-soft);padding-block:1.6rem 3rem;margin-to
  font-size:.62em;letter-spacing:.01em;color:var(--fg-dim);display:block;margin-top:.2rem}
 .hero .res p{margin:.6rem 0 0;font-size:.95rem;line-height:1.6;color:var(--fg-dim)}
 .hero .res .rwhy{border-top:1px solid var(--line-soft);margin-top:.8rem;padding-top:.7rem}
+/* The brass veining is drawn at random positions that change with the pane's
+   size, so at some widths a vein lands directly behind the dateline or the
+   chosen line and sets the worst contrast there (640px and 960px, measured).
+   Rather than chase individual widths, fade the veining out across the copy
+   column: the texture lives on the right, where the bottle is and the type is
+   not. The canvas is decorative, so losing it there costs nothing. */
+.hero canvas{--cmask:linear-gradient(90deg,
+  rgba(0,0,0,.10) 0%, rgba(0,0,0,.14) 34%, rgba(0,0,0,.55) 58%, #000 78%);
+ -webkit-mask-image:var(--cmask);mask-image:var(--cmask);
+ -webkit-mask-size:100% 100%;mask-size:100% 100%;
+ -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+
+/* The scrim is retired. The hero is a glass pane now, so a wash of page colour
+   across it is exactly the thing that stopped it matching the cards. The ::after
+   stays as an empty box (print and the backlight reference the stacking order);
+   it simply paints nothing. Legibility comes from the .sub text-shadow and from
+   the headline sitting left of the vial. */
+.hero::after{background:none}
+
 /* 4 - the decision, stated on the main page without a click. */
 .hero .chosen{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;
  margin:.9rem 0 0;font-family:var(--mono);font-size:.78rem;letter-spacing:.02em;color:var(--fg)}
@@ -1417,7 +1489,16 @@ function tabStart(p){
  if(hd&&hr)hd.onclick=()=>{const open=hr.hidden;hr.hidden=!open;
   hd.setAttribute("aria-expanded",open?"true":"false");
   hd.textContent=open?"Hide The Result":"Review Complete";
-  if(open)hr.scrollIntoView({block:"nearest",behavior:(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches)?"auto":"smooth"})};
+  /* Only scroll when the pane genuinely cannot be seen, and scroll the button
+     rather than the pane: a tall pane with block:"nearest" scrolls to its own
+     bottom and throws the headline off screen on a phone. */
+  /* Scroll only if the control itself has gone out of view. Scrolling the pane
+     into view pushed the headline off screen on a phone and on short landscape,
+     because the pane is taller than the viewport; and the button is in view by
+     definition when someone has just clicked it, so in practice nothing moves. */
+  if(open){const r=hd.getBoundingClientRect(),vh=window.innerHeight||0;
+   if(r.bottom<0||r.top>vh)
+    hd.scrollIntoView({block:"center",behavior:(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches)?"auto":"smooth"})}};
 
  p.appendChild(el("div","grid g5",
   ['<button type="button" class="big" style="border-left-color:var(--p-craft)" data-go="name"><span class="n">6</span><span class="l">Brands On The Table</span><span class="s">Five open, plus the incumbent</span></button>',
@@ -1468,12 +1549,15 @@ function drawMarble(x,W,H,seed,reveal){
  const show=reveal==null?1:reveal;
  let s=seed*7919+104729;const rnd=()=>((s=(s*9301+49297)%233280)/233280);
  x.clearRect(0,0,W,H);
- x.fillStyle="#0c0c0c";x.fillRect(0,0,W,H);
- // a few broad tonal fields so the stone is not a flat rectangle
+ /* No base fill. The hero is a glass pane like every other card on the page,
+    so the canvas may only ADD veining over it - an opaque slab here was what
+    made the hero read as solid black while its own background was already
+    the same translucent gradient the cards use. */
+ // broad tonal fields, light-only so the pane stays see-through
  for(let i=0;i<7;i++){
   const cx=rnd()*W,cy=rnd()*H,r=H*(0.4+rnd()*0.9);
   x.beginPath();x.arc(cx,cy,r,0,6.2832);
-  x.fillStyle=rnd()>.5?"rgba(255,255,255,.012)":"rgba(0,0,0,.25)";x.fill();
+  x.fillStyle=rnd()>.5?"rgba(255,255,255,.014)":"rgba(255,255,255,.006)";x.fill();
  }
  // brass veins: a wandering trunk with branches, drawn in two passes for depth
  const vein=(x0,y0,len,ang,width,alpha,tint)=>{
@@ -1496,10 +1580,8 @@ function drawMarble(x,W,H,seed,reveal){
  }
  // fine white calcite fractures, sparse
  for(let c=0;c<4;c++)vein(rnd()*W,rnd()*H,8+rnd()*12,(rnd()-.5)*2,.55,.07,"#cfc7b5");
- // vignette so type sits clean over the stone
- const g=x.createLinearGradient(0,0,W,0);
- g.addColorStop(0,"rgba(9,9,10,.86)");g.addColorStop(.55,"rgba(9,9,10,.45)");g.addColorStop(1,"rgba(9,9,10,.1)");
- x.fillStyle=g;x.fillRect(0,0,W,H);
+ /* The vignette is gone with the slab. It was a second scrim painted inside
+    the canvas, on top of the CSS one, and between them the glass never showed. */
 }
 
 /* ---------------- tab: name ---------------- */
