@@ -1284,6 +1284,41 @@ footer{border-top:1px solid var(--line-soft);padding-block:1.6rem 3rem;margin-to
  .name .nm{transition:none}
 }
 
+/* 248px was sized for a nineteen-item list. With the list in the panel the
+   rail holds four short things, so it gives the document back the width. */
+@media(min-width:960px){.shell{grid-template-columns:202px minmax(0,1fr)}}
+
+/* ================== the rail goes quiet ==================
+   This is the menu Konrad is clean about. Nineteen section names standing
+   permanently down the side is the clutter, and adding an overlay on top of
+   it left the clutter exactly where it was. The list now lives only in the
+   panel; the rail keeps the wordmark, the light, one word to open everything,
+   and where you currently are.
+
+   #nav stays in the DOM - show() writes aria-selected across it and the menu
+   reads the current section from it - but it is display:none, so it is out of
+   the tab order too and the panel is the single way through. */
+#nav{display:none!important}
+.rail-in > .railfoot{margin-top:1.1rem}
+.railwhere{display:block;font-family:var(--mono);font-size:.63rem;letter-spacing:.14em;
+ text-transform:uppercase;color:var(--accent-deep);margin:1.15rem 0 .3rem}
+.railnow{display:block;font-family:var(--wordmark);font-weight:700;font-size:1.02rem;
+ letter-spacing:-.012em;color:var(--fg);line-height:1.25}
+.railtrig{width:100%;justify-content:space-between}
+@media(min-width:960px){
+ .rail-in{display:flex;flex-direction:column;height:100%;padding:18px 18px 18px 0}
+ .rail-in > .railfoot{margin-top:auto}
+}
+@media(max-width:959px){
+ /* On a phone the rail is a top bar: the wordmark, the light and Menu on one
+    line, and the current section underneath it. */
+ .railwhere{display:none}
+ .railnow{font-size:.84rem;margin:0;color:var(--fg-dim)}
+ .railmenu{margin:0 0 0 auto}
+ .railtrig{width:auto}
+}
+@media print{.railwhere,.railnow{display:none}}
+
 </style>
 
 <noscript><div style="max-width:60ch;margin:12vh auto;padding:0 1.2rem;font:400 17px/1.6 system-ui,sans-serif;color:#f2eee6"><h1 style="font:800 1.6rem/1.15 system-ui,sans-serif;text-transform:uppercase;letter-spacing:-.02em;margin:0 0 .8rem">This Review Needs JavaScript</h1><p>Every section of this review &mdash; the sixty-day calendar, the model, the five audits &mdash; is built in the browser, so with scripting turned off there is nothing here to read rather than something broken.</p><p style="color:#a39d91">Enable JavaScript and reload, or ask Apex 360 for a PDF.</p></div></noscript>
@@ -1294,6 +1329,7 @@ footer{border-top:1px solid var(--line-soft);padding-block:1.6rem 3rem;margin-to
   <span class="mark"><b data-t="Greenlight">Greenlight</b><span class="markroom" data-t="Room">Room</span></span>
   <button type="button" class="lamp" id="lamp" aria-pressed="false"><i></i>Light</button>
   <nav role="tablist" id="nav"></nav>
+  <span class="railwhere">Section</span><span class="railnow" id="railnow">Overview</span>
   <div class="railfoot"><b>Apex 360</b>17 Oct 2026<br>Private draft</div>
   <div class="printbar">
    <button type="button" class="printbtn" id="printbtn">
@@ -4311,6 +4347,11 @@ function show(id){
  const host_=document.getElementById("p-"+id);
  if(host_)requestAnimationFrame(()=>{sweepReg.scan(host_);sweepReg.rescan();revealReg.scan(host_)});
  [...nav.children].forEach(b=>b.setAttribute("aria-selected",b.dataset.id===id));
+ /* The rail no longer lists the sections, so it has to say which one you are
+    looking at - otherwise the deck loses its sense of place entirely. */
+ {const w=document.getElementById("railnow");
+  const t=TABS.find(t=>t[0]===id);
+  if(w&&t)w.textContent=t[1];}
  const host=document.getElementById("p-"+id);
  if(!built[id]){
   /* Mark built FIRST and in a finally: when a builder threw, built stayed unset
