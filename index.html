@@ -1076,6 +1076,105 @@ footer{border-top:1px solid var(--line-soft);padding-block:1.6rem 3rem;margin-to
  border-radius:2px;padding:.2rem .42rem}
 @media print{.hero .res{break-inside:avoid}.hero .vglow{display:none}
  .hero .res[hidden]{display:block}}
+/* ================== the menu ==================
+   Quiet until you ask for it, then everything at once, each entry saying what
+   it is in the section's own words. The trigger is a single word; the panel is
+   the whole document laid out in four groups. */
+.railtrig{display:inline-flex;align-items:center;gap:.55rem}
+.railtrig .mbars{display:inline-flex;flex-direction:column;gap:3px;width:14px}
+.railtrig .mbars i{display:block;height:1px;background:currentColor;transition:transform .22s cubic-bezier(.2,.7,.3,1),opacity .18s}
+.railtrig .mbars i:nth-child(1){width:14px}
+.railtrig .mbars i:nth-child(2){width:9px}
+.railtrig[aria-expanded="true"] .mbars i:nth-child(1){transform:translateY(2px) rotate(45deg)}
+.railtrig[aria-expanded="true"] .mbars i:nth-child(2){width:14px;transform:translateY(-2px) rotate(-45deg)}
+
+.menuwrap{position:fixed;inset:0;z-index:60;overflow-y:auto;overscroll-behavior:contain;
+ background:color-mix(in srgb,var(--bg) 88%,transparent);
+ -webkit-backdrop-filter:blur(22px) saturate(130%);backdrop-filter:blur(22px) saturate(130%)}
+@supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){
+ .menuwrap{background:var(--bg)}
+}
+.menusheet{min-height:100%;padding:clamp(1.1rem,3.2vw,2.4rem) clamp(1rem,4vw,3rem) 3rem;
+ max-width:1180px;margin:0 auto}
+.menuhead{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;
+ border-bottom:1px solid var(--line-soft);padding-bottom:.9rem;margin-bottom:1.6rem}
+.menuhead h2{font-family:var(--wordmark);font-weight:800;text-transform:uppercase;
+ letter-spacing:-.028em;font-size:clamp(1.5rem,4.4vw,2.3rem);margin:0;line-height:1}
+.menuhead .mclose{font:inherit;font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;
+ text-transform:uppercase;background:transparent;border:1px solid var(--line);color:var(--fg-dim);
+ border-radius:3px;padding:.5rem .8rem;cursor:pointer;transition:border-color .16s,color .16s}
+.menuhead .mclose:hover{border-color:var(--accent);color:var(--fg)}
+
+.menuacts{display:flex;flex-wrap:wrap;gap:.6rem;margin:0 0 2rem}
+.menugrid{display:grid;gap:1.9rem clamp(1.2rem,3vw,2.6rem);
+ grid-template-columns:repeat(auto-fit,minmax(236px,1fr))}
+.menugroup > h3{font-family:var(--mono);font-size:.63rem;letter-spacing:.16em;text-transform:uppercase;
+ color:var(--accent-deep);margin:0 0 .5rem;padding-bottom:.5rem;border-bottom:1px solid var(--line-soft)}
+.menugroup ul{list-style:none;margin:0;padding:0}
+
+/* The hover: a hairline draws in from the left and the entry lifts its ink.
+   Nothing moves position, so a pointer travelling down the list never chases
+   a target that has shifted. */
+.mitem{position:relative;display:block;width:100%;text-align:left;font:inherit;
+ background:transparent;border:0;cursor:pointer;padding:.62rem 0 .62rem .78rem;color:var(--fg-dim)}
+.mitem::before{content:"";position:absolute;left:0;top:.72rem;bottom:.72rem;width:1px;
+ background:var(--p-craft);transform:scaleY(0);transform-origin:top;
+ transition:transform .26s cubic-bezier(.2,.7,.3,1)}
+.mitem b{display:block;font-weight:600;font-size:.95rem;color:var(--fg);letter-spacing:-.008em;
+ transition:color .16s}
+.mitem span{display:block;font-size:.76rem;line-height:1.45;color:var(--fg-faint);margin-top:.16rem;
+ transition:color .2s}
+.mitem:hover::before,.mitem:focus-visible::before{transform:scaleY(1)}
+.mitem:hover span,.mitem:focus-visible span{color:var(--fg-dim)}
+.mitem[aria-current="true"]::before{transform:scaleY(1);background:var(--neon)}
+.mitem[aria-current="true"] b{color:var(--neon)}
+@media (prefers-reduced-motion:reduce){
+ .mitem::before{transition:none}.railtrig .mbars i{transition:none}
+}
+@media print{.menuwrap{display:none!important}}
+
+/* The rail was sizing itself to its content, not its container: a grid/flex
+   child defaults to min-width:auto, so .hrail measured 589px inside a 346px
+   column and simply overflowed instead of scrolling. That made the horizontal
+   scroll dead everywhere - and the hint under it still told the reader to drag
+   sideways. Constrain the column and the rail scrolls as intended. */
+.callay > div{min-width:0}
+.hrail{max-width:100%}
+/* And the hint only appears when there is in fact something to scroll. */
+.railhint[hidden]{display:none}
+
+/* ---------- horizontal rail: position and controls ----------
+   Konrad's carousel affordance: a page counter and two arrows that say how far
+   along you are and let you move without a drag. The whole bar removes itself
+   when the rail has nothing to scroll, so it never advertises a gesture that
+   does nothing. */
+.railnav{display:flex;align-items:center;gap:.7rem;margin:.55rem 0 0}
+.railnav[hidden]{display:none}
+.railnav .rnum{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;color:var(--fg-faint);
+ font-variant-numeric:tabular-nums}
+.railnav .rnum b{color:var(--accent);font-weight:500}
+.railnav .rbtns{display:flex;gap:.35rem;margin-left:auto}
+.railnav button{font:inherit;line-height:0;background:transparent;border:1px solid var(--line);
+ color:var(--fg-dim);border-radius:3px;padding:.4rem .62rem;cursor:pointer;
+ transition:border-color .16s,color .16s,opacity .16s}
+.railnav button:hover:not([disabled]){border-color:var(--p-craft);color:var(--fg)}
+.railnav button[disabled]{opacity:.32;cursor:default}
+.railnav button svg{width:11px;height:11px;display:block}
+.railtrack{height:1px;background:var(--line-soft);flex:1;max-width:190px;position:relative;overflow:hidden}
+.railtrack i{position:absolute;inset:0 auto 0 0;background:var(--p-craft);
+ transform-origin:left;transition:transform .22s cubic-bezier(.2,.7,.3,1)}
+@media (prefers-reduced-motion:reduce){.railtrack i{transition:none}}
+@media print{.railnav{display:none!important}}
+
+/* The brand cards pick up the menu's hover language so the two read as one
+   system: a hairline draws in, the ink lifts, nothing moves. */
+.name{position:relative}
+.name::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:1px;
+ background:var(--p-craft);transform:scaleY(0);transform-origin:top;z-index:2;
+ transition:transform .28s cubic-bezier(.2,.7,.3,1)}
+.name:hover::before,.name:focus-within::before{transform:scaleY(1)}
+@media (prefers-reduced-motion:reduce){.name::before{transition:none}}
+
 </style>
 
 <noscript><div style="max-width:60ch;margin:12vh auto;padding:0 1.2rem;font:400 17px/1.6 system-ui,sans-serif;color:#f2eee6"><h1 style="font:800 1.6rem/1.15 system-ui,sans-serif;text-transform:uppercase;letter-spacing:-.02em;margin:0 0 .8rem">This Review Needs JavaScript</h1><p>Every section of this review &mdash; the sixty-day calendar, the model, the five audits &mdash; is built in the browser, so with scripting turned off there is nothing here to read rather than something broken.</p><p style="color:#a39d91">Enable JavaScript and reload, or ask Apex 360 for a PDF.</p></div></noscript>
@@ -1442,23 +1541,100 @@ function tourFinish(){
  card.appendChild(foot);
  tourNode.innerHTML="";tourNode.appendChild(card);tourNode.scrollTop=0;
 }
+/* The menu. Konrad's pattern: one quiet word in the rail, and when it opens,
+   the whole document at once - every section named, grouped, and saying what it
+   is in its own opening line rather than in a label someone invented for it.
+   It reuses the tour's overlay machinery (the wrapper carries .tourwrap) so the
+   two can never be open together and Escape closes whichever is up. */
+const MENU=[
+ ["The Decision",[
+  ["start","The numbers the rest of the document hangs off, and the brand that is now settled."],
+  ["name","Six on the table: the name you trade under today, and five verified open against the .com registry."],
+  ["worth","This page exists because you should know what you are holding."]]],
+ ["The Campaign",[
+  ["campaign","Sixty posts written and briefed, day by day. Tap a day to see the post."],
+  ["gameplan","Everything we run, in the order we run it, and who pays for what."],
+  ["ig","She keeps it, she grows it, and she stops letting it hold anything she cannot afford to lose."],
+  ["offer","Education with nothing to buy is a magazine."],
+  ["platforms","Paid advertising and organic posting are two different questions with two different answers."]]],
+ ["The Market",[
+  ["research","Before writing a word of the campaign we went and read the category."],
+  ["audience","Four groups drive effectively all demand in this category."],
+  ["channels","Instagram is one line in this table, and not the line that pays."],
+  ["leads","The one clearly lawful acquisition route identified."],
+  ["plan","Her one advertising expense, sized and structured."],
+  ["model","Both revenue paths, side by side."]]],
+ ["The Record",[
+  ["done","Work started on 13 October, before the deposit cleared."],
+  ["compliance","Three regulators have moved on this category in 2026."],
+  ["rose","The concierge that sits on the store and answers questions without ever being able to make a claim."],
+  ["phases","Three moves, in order, each one gated on the last."],
+  ["audit","Five passes rather than one list."]]]];
+/* Every id in MENU must be a real section and every section must appear once -
+   a menu that silently drops a section is worse than no menu. */
+const menuName=id=>{const t=TABS.find(t=>t[0]===id);return t?t[1]:null};
+
+let menuNode=null;
+function menuClose(){menuNode=null;overlayClose();
+ const t=document.querySelector(".railtrig");
+ if(t){t.setAttribute("aria-expanded","false");t.focus&&t.focus()}}
+function menuOpen(){
+ /* Built fresh every time, so a node removed by overlayClose or by the Escape
+    handler can never be reused after it has left the document. */
+ menuNode=el("div","tourwrap menuwrap");
+ const sheet=el("div","menusheet");
+
+ const head=el("div","menuhead");
+ head.innerHTML='<h2>Greenlight Room</h2>';
+ const x=el("button","mclose","Close");x.type="button";x.onclick=menuClose;
+ head.appendChild(x);sheet.appendChild(head);
+
+ const acts=el("div","menuacts");
+ [["Start The Review","btn go",()=>tourOpen(0)],
+  ["What We Need From You","btn",()=>tourOpen(5)],
+  ["Review Complete","btn",()=>{show("start");
+    const r=document.querySelector("#herores"),d=document.querySelector("#herodone");
+    if(r&&d&&r.hidden){d.click()}}]]
+ .forEach(([t,c,fn])=>{const b=el("button",c,t);b.type="button";
+  b.onclick=()=>{menuClose();fn()};acts.appendChild(b)});
+ sheet.appendChild(acts);
+
+ const grid=el("div","menugrid");
+ const curEl=document.querySelector("#nav [aria-selected='true']");
+ const cur=curEl?curEl.dataset.id:null;
+ MENU.forEach(([g,items])=>{
+  const col=el("div","menugroup");
+  col.innerHTML='<h3>'+g+'</h3>';
+  const ul=document.createElement("ul");
+  items.forEach(([id,d])=>{
+   const t=menuName(id);
+   if(!t)return;  /* a section that no longer exists is skipped, never rendered dead */
+   const li=document.createElement("li");
+   const b=el("button","mitem",'<b>'+t+'</b><span>'+d+'</span>');
+   b.type="button";
+   if(cur===id)b.setAttribute("aria-current","true");
+   b.onclick=()=>{menuClose();show(id)};
+   li.appendChild(b);ul.appendChild(li);
+  });
+  col.appendChild(ul);grid.appendChild(col);
+ });
+ sheet.appendChild(grid);
+ menuNode.appendChild(sheet);
+ document.body.appendChild(menuNode);
+ overlayOpen(menuNode);
+ const t=document.querySelector(".railtrig");
+ if(t)t.setAttribute("aria-expanded","true");
+ x.focus&&x.focus();
+}
 function railMenu(){
  const host=document.querySelector(".rail-in");if(!host)return;
  const wrap=el("div","railmenu");
- const trig=el("button","railtrig",'<span>Review</span><i>&#9662;</i>');
+ const trig=el("button","railtrig",
+  '<span class="mbars" aria-hidden="true"><i></i><i></i></span><span>Menu</span>');
  trig.type="button";trig.setAttribute("aria-expanded","false");
- const panel=el("div","railpanel");panel.hidden=true;
- [["Start The Review","Seven questions, about five minutes",()=>tourOpen(0)],
-  ["What We Need From You","The six things only you hold",()=>{tourOpen(5)}],
-  ["Jump To The Audit","What the three workstreams disagree on",()=>show("audit")]]
- .forEach(([t,d,fn])=>{const b=el("button",null,'<b>'+t+'</b><span>'+d+'</span>');
-  b.type="button";b.onclick=()=>{close();fn()};panel.appendChild(b)});
- function open(){panel.hidden=false;trig.setAttribute("aria-expanded","true")}
- function close(){panel.hidden=true;trig.setAttribute("aria-expanded","false")}
- trig.onclick=()=>panel.hidden?open():close();
- document.addEventListener("click",e=>{if(!wrap.contains(e.target))close()});
- document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!panel.hidden)close()});
- wrap.appendChild(trig);wrap.appendChild(panel);
+ trig.setAttribute("aria-haspopup","dialog");
+ trig.onclick=()=>{document.querySelector(".menuwrap")?menuClose():menuOpen()};
+ wrap.appendChild(trig);
  const nav=host.querySelector("nav");
  host.insertBefore(wrap, nav||host.firstChild.nextSibling);
 }
@@ -4067,6 +4243,47 @@ function railUp(r){
  r.addEventListener("click",function(e){
   if(suppress){suppress=false;e.stopPropagation();e.preventDefault()}},true);
  r.addEventListener("dragstart",function(e){if(moved)e.preventDefault()});
+
+ /* Position readout and arrows. Pages are whole viewports of the rail, which is
+    what an arrow press moves, so the counter and the buttons always agree. */
+ var nav=el("div","railnav");
+ var num=el("span","rnum");
+ var track=el("div","railtrack");track.innerHTML="<i></i>";
+ var fill=track.querySelector("i");
+ var btns=el("div","rbtns");
+ var ARR='<svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6.2 1.4 2.4 5l3.8 3.6"/></svg>';
+ var prev=el("button",null,ARR);prev.type="button";prev.setAttribute("aria-label","Previous");
+ var next=el("button",null,ARR.replace('<svg ','<svg style="transform:scaleX(-1)" '));
+ next.type="button";next.setAttribute("aria-label","Next");
+ btns.appendChild(prev);btns.appendChild(next);
+ nav.appendChild(num);nav.appendChild(track);nav.appendChild(btns);
+ if(r.parentNode)r.parentNode.insertBefore(nav,r.nextSibling);
+ function pages(){return Math.max(1,Math.ceil(r.scrollWidth/Math.max(1,r.clientWidth)))}
+ function page(){return Math.min(pages(),Math.round(r.scrollLeft/Math.max(1,r.clientWidth))+1)}
+ var pad=function(n){return (n<10?"0":"")+n};
+ var hint=null;
+ function sync(){
+  var P=pages();
+  if(hint===null&&r.parentNode)hint=r.parentNode.querySelector(".railhint")||false;
+  if(hint)hint.hidden=P<=1;
+  /* Nothing to scroll: take the whole bar out rather than show 01 / 01. */
+  nav.hidden = P<=1;
+  if(nav.hidden)return;
+  var c=page();
+  num.innerHTML='<b>'+pad(c)+'</b> / '+pad(P);
+  fill.style.transform='scaleX('+(c/P)+')';
+  prev.disabled=r.scrollLeft<=1;
+  next.disabled=r.scrollLeft>=r.scrollWidth-r.clientWidth-1;
+ }
+ function go(dir){
+  var still=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  r.scrollBy({left:dir*r.clientWidth,behavior:still?"auto":"smooth"});
+ }
+ prev.onclick=function(){go(-1)};next.onclick=function(){go(1)};
+ r.addEventListener("scroll",sync,{passive:true});
+ window.addEventListener("resize",sync);
+ if(window.ResizeObserver){try{new ResizeObserver(sync).observe(r)}catch(e){}}
+ sync();
 }
 
 /* ---------- [11] looping marquee strip ---------- */
