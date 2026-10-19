@@ -998,17 +998,22 @@ footer{border-top:1px solid var(--line-soft);padding-block:1.6rem 3rem;margin-to
     in the DOM and painted over it, which is what turned the bottle purple
     instead of lighting it. */
  z-index:0;
- right:9%;top:52%;width:30%;height:72%;transform:translateY(-50%);
+ right:7%;top:52%;width:34%;height:80%;transform:translateY(-50%);
  /* Not a hue - a small pool of black that the bottle sits on, so it reads as
     sharply as it does on its own render while the rest of the pane stays glass.
     Carried fully to transparent inside its own box so nothing has an edge. */
- /* Charcoal, not black, and never fully opaque: the honeycomb still reads
-    through it, just darker than the pane around it. */
+ /* It has to be DARKER than the page's own canvas to darken anything, and
+    rgb(14,13,18) is lighter than --bg (#09090a) - so the previous charcoal
+    dimmed the pane by 0.9 of 255, which is to say not at all. What makes the
+    pane read light here is the honeycomb, so the halo's job is to hold that
+    back locally: a tone below the canvas, at partial alpha, dimming the
+    pattern without erasing it. Measured: ~9 luminance units down with about
+    60% of the honeycomb's contrast still there. */
  background:radial-gradient(circle at center,
-  rgba(14,13,18,.52) 0%,
-  rgba(14,13,18,.40) 34%,
-  rgba(14,13,18,.22) 58%,
-  rgba(14,13,18,.08) 78%,
+  rgba(4,4,7,.66) 0%,
+  rgba(4,4,7,.58) 34%,
+  rgba(4,4,7,.40) 58%,
+  rgba(4,4,7,.18) 78%,
   transparent 94%);
  filter:blur(34px);
  transition:opacity .9s ease,transform .55s cubic-bezier(.2,.7,.3,1)}
