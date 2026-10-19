@@ -1237,6 +1237,53 @@ footer{border-top:1px solid var(--line-soft);padding-block:1.6rem 3rem;margin-to
 }
 @media print{.rv{opacity:1!important;transform:none!important}}
 
+/* ================== the menu, animated ==================
+   Konrad's menu does not appear - it arrives. The sheet lifts in, the groups
+   follow, and the entries stagger down each column. That movement is most of
+   what makes the pattern feel considered; without it the same markup reads as
+   a page that simply swapped. */
+.menuwrap{opacity:0;transition:opacity .34s cubic-bezier(.2,.7,.3,1)}
+.menuwrap.up{opacity:1}
+.menusheet > *{opacity:0;transform:translate3d(0,22px,0)}
+.menuwrap.up .menusheet > *{opacity:1;transform:none;
+ transition:opacity .5s cubic-bezier(.2,.7,.3,1),transform .5s cubic-bezier(.2,.7,.3,1)}
+.menuwrap.up .menuhead{transition-delay:.04s}
+.menuwrap.up .menuacts{transition-delay:.10s}
+.menuwrap.up .menugrid{transition-delay:.14s}
+/* the entries themselves cascade down each column */
+.menugroup li{opacity:0;transform:translate3d(0,14px,0)}
+.menuwrap.up .menugroup li{opacity:1;transform:none;
+ transition:opacity .42s cubic-bezier(.2,.7,.3,1),transform .42s cubic-bezier(.2,.7,.3,1);
+ transition-delay:calc(.16s + var(--mi,0) * .035s)}
+.menuwrap.closing{opacity:0;transition:opacity .2s ease}
+@media (prefers-reduced-motion:reduce){
+ .menuwrap,.menusheet > *,.menugroup li{opacity:1!important;transform:none!important;transition:none!important}
+}
+
+/* ---------- card hover: the detail arrives, it does not just sit there ----------
+   Konrad reveals motion on a case card as you hover it. There is no video to
+   play here, so the equivalent is the card's own reasoning: the risk line is
+   held back until you are actually looking at that card, and the chrome name
+   lifts as it opens. */
+@media (hover:hover) and (pointer:fine){
+ /* max-height caps content, not the box: this line carries a top rule and
+    14px of padding, which kept 15px of it on screen while "collapsed". */
+ /* .name .vd.risk (0,3,0) sets the padding and the rule, so a .name .risk
+    (0,2,0) collapse loses to it and leaves 15px of box on screen. Match it. */
+ .name .vd.risk{max-height:0;opacity:0;margin-top:0;overflow:hidden;
+  padding-top:0;border-top-width:0;
+  transition:max-height .42s cubic-bezier(.2,.7,.3,1),opacity .3s ease,
+   margin-top .42s cubic-bezier(.2,.7,.3,1),padding-top .42s cubic-bezier(.2,.7,.3,1)}
+ .name:hover .vd.risk,.name:focus-within .vd.risk,.name[aria-pressed="true"] .vd.risk{
+  max-height:9rem;opacity:1;margin-top:.55rem;padding-top:.9rem;border-top-width:1px}
+ .name .nm{transition:transform .38s cubic-bezier(.2,.7,.3,1)}
+ .name:hover .nm,.name:focus-within .nm{transform:translateY(-2px)}
+}
+@media (prefers-reduced-motion:reduce){
+ .name .vd.risk{max-height:none;opacity:1;padding-top:.9rem;border-top-width:1px}
+ .name .nm{transition:none}
+}
+
 </style>
 
 <noscript><div style="max-width:60ch;margin:12vh auto;padding:0 1.2rem;font:400 17px/1.6 system-ui,sans-serif;color:#f2eee6"><h1 style="font:800 1.6rem/1.15 system-ui,sans-serif;text-transform:uppercase;letter-spacing:-.02em;margin:0 0 .8rem">This Review Needs JavaScript</h1><p>Every section of this review &mdash; the sixty-day calendar, the model, the five audits &mdash; is built in the browser, so with scripting turned off there is nothing here to read rather than something broken.</p><p style="color:#a39d91">Enable JavaScript and reload, or ask Apex 360 for a PDF.</p></div></noscript>
@@ -1642,9 +1689,25 @@ const MENU=[
 const menuName=id=>{const t=TABS.find(t=>t[0]===id);return t?t[1]:null};
 
 let menuNode=null;
-function menuClose(){menuNode=null;overlayClose();
+function menuClose(){
+ const n=menuNode;menuNode=null;
  const t=document.querySelector(".railtrig");
- if(t){t.setAttribute("aria-expanded","false");t.focus&&t.focus()}}
+ if(t){t.setAttribute("aria-expanded","false");t.focus&&t.focus()}
+ const still=matchMedia("(prefers-reduced-motion:reduce)").matches;
+ /* Let it fade before the node leaves, but never leave the page locked if the
+    transition does not run - overlayClose is what releases inert and scroll. */
+ if(n&&n.isConnected&&!still){
+  n.classList.remove("up");n.classList.add("closing");
+  /* This timer must only ever remove ITS OWN node. Calling overlayClose here
+     tore down whatever had opened in the meantime - a menu entry that starts
+     the review opens the tour inside this fade, and the tour was being killed
+     180ms later. Release the page lock only if nothing is left open. */
+  setTimeout(()=>{
+   n.remove();
+   if(!document.querySelector(".tourwrap"))overlayClose();
+  },180);
+ } else overlayClose();
+}
 function menuOpen(){
  /* Built fresh every time, so a node removed by overlayClose or by the Escape
     handler can never be reused after it has left the document. */
@@ -1673,12 +1736,12 @@ function menuOpen(){
   const col=el("div","menugroup");
   col.innerHTML='<h3>'+g+'</h3>';
   const ul=document.createElement("ul");
-  items.forEach(([id,d])=>{
+  items.forEach(([id,d],k)=>{
    const t=menuName(id);
    if(!t)return;  /* a section that no longer exists is skipped, never rendered dead */
    const li=document.createElement("li");
    const b=el("button","mitem",'<b>'+t+'</b><span>'+d+'</span>');
-   b.type="button";
+   b.type="button";li.style.setProperty("--mi",k);
    if(cur===id)b.setAttribute("aria-current","true");
    b.onclick=()=>{menuClose();show(id)};
    li.appendChild(b);ul.appendChild(li);
@@ -1689,6 +1752,10 @@ function menuOpen(){
  menuNode.appendChild(sheet);
  document.body.appendChild(menuNode);
  overlayOpen(menuNode);
+ /* One frame on the start state, then flip - otherwise the browser coalesces
+    the two and nothing moves. */
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  menuNode&&menuNode.classList.add("up")}));
  const t=document.querySelector(".railtrig");
  if(t)t.setAttribute("aria-expanded","true");
  x.focus&&x.focus();
@@ -1700,7 +1767,10 @@ function railMenu(){
   '<span class="mbars" aria-hidden="true"><i></i><i></i></span><span>Menu</span>');
  trig.type="button";trig.setAttribute("aria-expanded","false");
  trig.setAttribute("aria-haspopup","dialog");
- trig.onclick=()=>{document.querySelector(".menuwrap")?menuClose():menuOpen()};
+ /* menuNode is the live reference; the DOM still holds the old node while it
+    fades, so testing for .menuwrap made a quick second press close nothing and
+    open nothing. */
+ trig.onclick=()=>{menuNode?menuClose():menuOpen()};
  wrap.appendChild(trig);
  const nav=host.querySelector("nav");
  host.insertBefore(wrap, nav||host.firstChild.nextSibling);
